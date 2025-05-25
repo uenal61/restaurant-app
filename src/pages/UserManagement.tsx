@@ -75,6 +75,16 @@ export default function UserManagement() {
     setUsers((prev) => prev.filter((u) => u.id !== user.id));
   };
 
+  const handleReject = async (user: User) => {
+    const confirm = window.confirm(
+      `Möchtest du die Registrierung von "${user.name}" wirklich ablehnen und löschen?`
+    );
+    if (!confirm) return;
+
+    await deleteDoc(doc(db, 'users', user.id));
+    setUsers((prev) => prev.filter((u) => u.id !== user.id));
+  };
+
   const pendingUsers = users.filter((u) => u.role === 'pending');
   const activeUsers = users.filter((u) => u.role !== 'pending');
 
@@ -94,12 +104,20 @@ export default function UserManagement() {
                 {user.instagram && (
                   <p className="text-sm text-gray-400">📸 @{user.instagram}</p>
                 )}
-                <button
-                  onClick={() => updateRole(user.id, 'user')}
-                  className="mt-3 bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm font-semibold"
-                >
-                  ✅ Freischalten
-                </button>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => updateRole(user.id, 'user')}
+                    className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm font-semibold"
+                  >
+                    ✅ Freischalten
+                  </button>
+                  <button
+                    onClick={() => handleReject(user)}
+                    className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm font-semibold"
+                  >
+                    ❌ Ablehnen
+                  </button>
+                </div>
               </div>
             ))}
           </div>
