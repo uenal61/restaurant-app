@@ -1,109 +1,60 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { auth, db } from '../firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        setIsLoggedIn(true);
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists() && userDoc.data().role === 'admin') {
-          setIsAdmin(true);
-        }
-      } else {
-        setIsLoggedIn(false);
-        setIsAdmin(false);
-      }
-    });
+  const toggleMenu = () => setIsOpen(!isOpen);
 
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    await auth.signOut();
-    navigate('/');
-  };
-
-  const navLink = (to: string, label: string) => (
-    <Link
-      to={to}
-      onClick={() => setMenuOpen(false)}
-      className={`block px-4 py-2 rounded transition-colors ${
-        location.pathname === to
-          ? 'bg-blue-600 text-white'
-          : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-      }`}
-    >
-      {label}
-    </Link>
-  );
+  const navItems = [
+    { name: "Home", path: "/" },
+    { name: "Restaurants", path: "/restaurants" },
+    { name: "Statistik", path: "/statistics" },
+    { name: "Admin", path: "/admin" },
+    { name: "Bewerten", path: "/bewerten" },
+  ];
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-700 shadow">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-        <Link to="/home" className="text-2xl font-bold text-blue-400 hover:text-blue-300">
-          🍽️ fridaysdining
-        </Link>
+    <nav className="bg-purple-700 text-white p-4 shadow-md">
+      <div className="container mx-auto flex justify-between items-center">
+        <Link to="/" className="text-xl font-bold">FridaysDining</Link>
+        <button className="md:hidden" onClick={toggleMenu}>
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
 
-        {isLoggedIn && (
-          <div className="hidden md:flex items-center gap-1 text-sm">
-            {navLink('/home', 'Home')}
-            {navLink('/statistics', 'Statistik')}
-            {navLink('/top', 'Bestenliste')}
-            {navLink('/create', 'Neues Restaurant')}
-            {isAdmin && (
-              <>
-                {navLink('/criteria', 'Kriterien')}
-                {navLink('/users', 'Admin')}
-              </>
-            )}
-            <button
-              onClick={handleLogout}
-              className="ml-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-            >
-              Logout
-            </button>
-          </div>
-        )}
-
-        {isLoggedIn && (
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden text-white focus:outline-none text-2xl"
-          >
-            ☰
-          </button>
-        )}
+        <ul className="hidden md:flex space-x-6">
+          {navItems.map((item) => (
+            <li key={item.name}>
+              <Link
+                to={item.path}
+                className="hover:underline hover:text-gray-200"
+              >
+                {item.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {menuOpen && isLoggedIn && (
-        <div className="md:hidden px-4 pb-3 space-y-1 text-sm">
-          {navLink('/home', 'Home')}
-          {navLink('/statistics', 'Statistik')}
-          {navLink('/top', 'Bestenliste')}
-          {navLink('/create', 'Neues Restaurant')}
-          {isAdmin && (
-            <>
-              {navLink('/criteria', 'Kriterien')}
-              {navLink('/users', 'Admin')}
-            </>
-          )}
-          <button
-            onClick={handleLogout}
-            className="block w-full text-left bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
-          >
-            Logout
-          </button>
-        </div>
+      {/* Mobile Menu */}
+      {isOpen && (
+        <ul className="md:hidden mt-4 space-y-2 px-4">
+          {navItems.map((item) => (
+            <li key={item.name}>
+              <Link
+                to={item.path}
+                className="block py-2 border-b border-purple-300 hover:text-gray-200"
+                onClick={() => setIsOpen(false)}
+              >
+                {item.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </nav>
   );
-}
+};
+
+export default Navbar;
